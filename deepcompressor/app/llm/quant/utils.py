@@ -6,18 +6,18 @@ import typing as tp
 import torch.nn as nn
 
 from ..nn.struct import LlmModelStruct
-from .quantizer.config import LlmModuleQuantizerConfig
+from .config import LlmQuantConfig
 
 __all__ = ["get_needs_inputs_fn", "get_needs_outputs_fn"]
 
 
-def get_needs_inputs_fn(model: LlmModelStruct, config: LlmModuleQuantizerConfig) -> tp.Callable[[str, nn.Module], bool]:
+def get_needs_inputs_fn(model: LlmModelStruct, config: LlmQuantConfig) -> tp.Callable[[str, nn.Module], bool]:
     """Get function that checks if the module needs to cache the inputs.
 
     Args:
         model (`LlmStruct`):
             Model struct.
-        config (`LlmModuleQuantizerConfig`):
+        config (`LlmQuantConfig`):
             Module quantization config.
 
     Returns:
@@ -59,14 +59,14 @@ def get_needs_inputs_fn(model: LlmModelStruct, config: LlmModuleQuantizerConfig)
 
 
 def get_needs_outputs_fn(
-    model: LlmModelStruct, config: LlmModuleQuantizerConfig
+    model: LlmModelStruct, config: LlmQuantConfig
 ) -> tp.Callable[[str, nn.Module], bool]:
     """Get function that checks if the module needs to cache the outputs.
 
     Args:
         model (`LlmStruct`):
             Model struct.
-        config (`LlmModuleQuantizerConfig`):
+        config (`LlmQuantConfig`):
             Module quantization config.
 
     Returns:
@@ -80,6 +80,10 @@ def get_needs_outputs_fn(
         needs_outputs_names.add(attn.q_rname)
         needs_outputs_names.add(attn.k_rname)
         needs_outputs_names.add(attn.v_rname)
+    elif config.enabled_smooth and config.smooth.enabled_attn:
+        needs_outputs_names.add(attn.q_rname)
+        needs_outputs_names.add(attn.k_rname)
+
     needs_outputs_names = tuple(needs_outputs_names)
 
     def needs_outputs(name: str, module: nn.Module) -> bool:
