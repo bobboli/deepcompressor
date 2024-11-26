@@ -76,10 +76,10 @@ def convert_to_qserve_w4x8y16_linear_weight(
         assert weight.min() >= -128, "first-level quantized weight should be greater than or equal to -128."
         assert weight.max() <= 127, "first-level quantized weight should be less than or equal to 127."
         weight = weight.view(oc, gc, group_size)
-        if not zero_pre_scaled:  # zero point is int8
+        if zero_pre_scaled:  # zero point is int8
             weight = weight.add_(zero)
         weight = weight.div_(subscale)
-        if zero_pre_scaled:  # zero point is int4
+        if not zero_pre_scaled:  # zero point is int4
             if zero.min() < 0:  # sint4 zero point
                 zero = zero.add_(8)  # convert to uint4 zero point
             assert zero.min() >= 0, "quantized zero point should be non-negative."
@@ -115,10 +115,10 @@ def convert_to_qserve_w4x8y16_linear_weight(
         zero = zero.reshape(oc).contiguous().view(oc, 1)
         # endregion
         # region quantize weight tensor
-        if not zero_pre_scaled:  # zero point is fp16
+        if zero_pre_scaled:  # zero point is fp16
             weight = weight.add_(zero)
         weight = weight.div_(scale).round_()
-        if zero_pre_scaled:  # zero point is int4
+        if not zero_pre_scaled:  # zero point is int4
             zero = zero.round_()
             if zero.min() < 0:  # sint4 zero point
                 zero = zero.add_(8)  # convert to uint4 zero point

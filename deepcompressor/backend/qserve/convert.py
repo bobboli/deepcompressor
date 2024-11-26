@@ -7,7 +7,7 @@ import os
 import torch
 import tqdm
 
-from .utils import convert_to_qserve_w4x8y16_linear_weight, convert_to_qserve_w8x8y16_linear_weight
+from utils import convert_to_qserve_w4x8y16_linear_weight, convert_to_qserve_w8x8y16_linear_weight
 
 __all__ = ["convert_to_qserve_state_dict"]
 
@@ -99,9 +99,9 @@ def convert_to_qserve_state_dict(
             # this is a zero point tensor
             zero = None if tensor is None or all(t.item() == 0 for t in tensor.flatten()) else tensor
             if name.endswith(".scaled_zero"):
-                zeros[name[:-12]] = (zero, False)  # zero point tensor is post-scaled
+                zeros[name[:-12]] = (zero, True)  # zero point tensor is pre-scaled
             else:
-                zeros[name[:-5]] = (zero, True)  # zero point tensor is pre-scaled
+                zeros[name[:-5]] = (zero, False)  # zero point tensor is not pre-scaled
         else:
             assert ".weight.scale" in name
             # this is a scale tensor
